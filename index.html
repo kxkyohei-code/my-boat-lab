@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -6,74 +7,217 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>MY BOAT LAB</title>
 <style>
-body{font-family:sans-serif;background:#f3f6fa;color:#18212f;margin:0;padding:16px}
-h1{color:#087f8c}
-.card{background:white;padding:16px;margin:14px 0;border-radius:14px;box-shadow:0 2px 8px #ddd}
-label{display:block;margin:12px 0 5px}
-input,select,button{box-sizing:border-box;padding:12px;width:100%;font-size:16px;border:1px solid #ccc;border-radius:8px}
-button{background:#087f8c;color:white;margin-top:12px;border:0;font-weight:bold}
-.result{padding:10px;background:#e7f7f5;margin:8px 0;border-radius:8px}
-small{color:#555}
+*{box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f2f6fb;margin:0;padding:16px;color:#182235}
+h1{color:#087f8c;margin:4px 0}
+h2{font-size:19px;margin-top:0}
+p{line-height:1.6}
+.card{background:white;padding:16px;border-radius:14px;margin:14px 0;box-shadow:0 2px 9px #0000000b}
+label{display:block;font-size:14px;margin:10px 0 5px}
+input,select,button{width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:8px;font-size:16px}
+button{background:#087f8c;color:white;border:0;margin-top:10px;font-weight:bold}
+button.secondary{background:#e5edf3;color:#182235}
+button.danger{background:#b42318}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.boat{border:1px solid #dbe4ee;border-radius:10px;padding:10px}
+.result{background:#e8f7f7;padding:12px;border-radius:10px;line-height:1.8;overflow-wrap:anywhere}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.stat{background:#f0f5f9;padding:12px;border-radius:10px}
+.num{font-size:22px;font-weight:bold;color:#087f8c}
+.small{font-size:12px;color:#64748b}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:8px 5px;border-bottom:1px solid #e2e8f0;text-align:left}
+.tablewrap{overflow-x:auto}
 </style>
 </head>
 <body>
-<h1>🚤 MY BOAT LAB</h1>
-<p>自分専用・ボートレース予想研究室</p>
+<h1>MY BOAT LAB</h1>
+<p>ボートレース予想・購入履歴・回収率管理</p>
+
 <div class="card">
-<h2>① レース情報</h2>
-<label>開催場</label>
-<input id="place" placeholder="例：住之江">
-<label>レース番号</label>
-<input id="race" placeholder="例：12R">
-<small>※今はサンプル入力版。実際のレース情報は手動で入力してな。</small>
+<h2>① 6艇スコア予想</h2>
+<p class="small">各項目を0〜10点で入力。スコアは参考値で、的中を保証するものではありません。</p>
+<div id="boats" class="grid"></div>
+<button onclick="calcScore()">ランキングを計算</button>
+<div id="scoreResult" class="result" style="margin-top:12px">各艇の点数を入力してください。</div>
 </div>
+
 <div class="card">
-<h2>② 6艇の評価</h2>
-<p>各項目を1〜10点で入力。最初は仮の点数でOK。</p>
-<div id="boats"></div>
-<button onclick="predict()">予想スコアを計算</button>
-<div id="results"></div>
-</div>
-<div class="card">
-<h2>③ オッズ・期待値チェック</h2>
-<label>買い目の的中確率（%）</label>
-<input id="prob" type="number" min="0" max="100" placeholder="例：15">
+<h2>② 期待値計算</h2>
+<label>的中確率（％）</label>
+<input id="prob" type="number" min="0" max="100" step="0.1" value="30">
 <label>オッズ</label>
-<input id="odds" type="number" min="1" step="0.1" placeholder="例：12.5">
-<button onclick="ev()">期待値を計算</button>
-<div id="evresult"></div>
+<input id="odds" type="number" min="0" step="0.1" value="4">
+<label>購入金額（円）</label>
+<input id="evStake" type="number" min="1" step="100" value="100">
+<button onclick="calcEV()">期待値を計算</button>
+<div id="evResult" class="result" style="margin-top:12px">確率とオッズを入力してください。</div>
+<p class="small">期待値は入力した確率が正しい場合の理論値です。実際の収支を保証しません。</p>
 </div>
+
 <div class="card">
-<h2>④ このサイトの使い方</h2>
-<p>モーター・選手・コース・展示・STを評価して、点数順に並べる簡易ツール。</p>
-<p>期待値＝的中確率×オッズ。確率は自分の予測値を入力する方式やで。</p>
-<small>この点数や期待値は勝利を保証するものではありません。まずは記録・検証用として使ってな。</small>
+<h2>③ 購入履歴を記録</h2>
+<label>日付</label>
+<input id="date" type="date">
+<label>場名</label>
+<input id="venue" placeholder="例：住之江">
+<label>レース番号</label>
+<select id="race">
+<option value="1R">1R</option><option value="2R">2R</option><option value="3R">3R</option>
+<option value="4R">4R</option><option value="5R">5R</option><option value="6R">6R</option>
+<option value="7R">7R</option><option value="8R">8R</option><option value="9R">9R</option>
+<option value="10R">10R</option><option value="11R">11R</option><option value="12R">12R</option>
+</select>
+<label>買い目</label>
+<input id="ticket" placeholder="例：1-2-3">
+<label>購入金額（円）</label>
+<input id="stake" type="number" min="1" step="100" placeholder="例：100">
+<label>払戻金（円）</label>
+<input id="payout" type="number" min="0" step="100" value="0">
+<label>結果</label>
+<select id="status">
+<option value="pending">結果待ち</option>
+<option value="hit">的中</option>
+<option value="miss">ハズレ</option>
+</select>
+<button onclick="addRecord()">履歴を保存</button>
+<p class="small">払戻金は購入した買い目全体への払戻額を入力。結果待ちは回収率計算から除外します。</p>
 </div>
+
+<div class="card">
+<h2>④ 収支・成績</h2>
+<div class="stats">
+<div class="stat">確定購入額<div id="totalStake" class="num">¥0</div></div>
+<div class="stat">払戻合計<div id="totalPayout" class="num">¥0</div></div>
+<div class="stat">確定収支<div id="profit" class="num">¥0</div></div>
+<div class="stat">回収率<div id="roi" class="num">—</div></div>
+<div class="stat">的中率<div id="hitRate" class="num">—</div></div>
+<div class="stat">記録数<div id="count" class="num">0</div></div>
+</div>
+</div>
+
+<div class="card">
+<h2>⑤ 購入履歴</h2>
+<button onclick="exportCSV()">CSVで書き出す</button>
+<button class="secondary" onclick="exportBackup()">バックアップ用JSONを表示</button>
+<textarea id="backupText" style="display:none;width:100%;height:120px;margin-top:10px" readonly></textarea>
+<div id="history" class="tablewrap" style="margin-top:12px"></div>
+<button class="danger" onclick="clearHistory()">履歴をすべて削除</button>
+<p class="small">履歴はこの端末のブラウザに保存されます。ブラウザのデータを消すと履歴も消える場合があります。定期的にCSV等でバックアップしてください。</p>
+</div>
+
 <script>
-const names=["1号艇","2号艇","3号艇","4号艇","5号艇","6号艇"];
-const fields=[["motor","モーター"],["driver","選手"],["course","コース"],["exhibit","展示"],["st","ST"]];
-const weights={motor:.20,driver:.25,course:.20,exhibit:.15,st:.20};
-document.getElementById("boats").innerHTML=names.map((n,i)=>`
-<div class="result"><h3>${n}</h3>
-${fields.map(f=>`<label>${f[1]}評価（1〜10）</label>
-<input type="number" id="${f[0]}${i}" min="1" max="10" value="${i===0?8:6}">`).join("")}
-</div>`).join("");
-function predict(){
-let arr=names.map((n,i)=>{
-let score=fields.reduce((sum,f)=>sum+Number(document.getElementById(f[0]+i).value||0)*weights[f[0]],0);
-return {name:n,score:score};
-}).sort((a,b)=>b.score-a.score);
-document.getElementById("results").innerHTML="<h3>評価順位</h3>"+arr.map((b,i)=>`<div class="result">${i+1}位：${b.name} — ${b.score.toFixed(2)}点</div>`).join("")+"<p>上位艇を参考に、展開やオッズも確認して買い目を検討してな。</p>";
+const boatBox=document.getElementById('boats');
+for(let i=1;i<=6;i++){
+ boatBox.insertAdjacentHTML('beforeend',`
+ <div class="boat">
+ <strong>艇 ${i}</strong>
+ ${[['motor','モーター',3],['driver','選手',3],['course','コース',3],['exhibition','展示',3],['st','スタート',3]].map(([key,label,val])=>`
+ <label>${label}（0〜10）</label>
+ <input type="number" min="0" max="10" step="0.5" id="${key}${i}" value="${val}">
+ `).join('')}
+ </div>`);
 }
-function ev(){
-let p=Number(document.getElementById("prob").value)/100;
-let o=Number(document.getElementById("odds").value);
-if(!(p>=0&&p<=1&&o>0)){document.getElementById("evresult").innerHTML="確率とオッズを入力してな。";return;}
-let value=p*o;
-document.getElementById("evresult").innerHTML=`<div class="result">期待回収率：${(value*100).toFixed(1)}%<br>${value>1?"入力値上はプラス期待値":"入力値上はマイナス期待値"}</div><small>確率の見積もりが正確とは限らへんので注意。</small>`;
+const weights={motor:.25,driver:.25,course:.2,exhibition:.2,st:.1};
+function calcScore(){
+ const rows=[];
+ for(let i=1;i<=6;i++){
+  let score=0;
+  for(const k in weights){
+   let v=Number(document.getElementById(k+i).value);
+   if(!Number.isFinite(v))v=0;
+   v=Math.max(0,Math.min(10,v));
+   score+=v*weights[k];
+  }
+  rows.push({boat:i,score});
+ }
+ rows.sort((a,b)=>b.score-a.score);
+ document.getElementById('scoreResult').innerHTML=rows.map((r,i)=>
+ `${i+1}位：${r.boat}号艇 — ${r.score.toFixed(2)}点`).join('<br>');
 }
-predict();
+function yen(n){return '¥'+Math.round(n).toLocaleString('ja-JP')}
+function calcEV(){
+ const p=Number(document.getElementById('prob').value)/100;
+ const o=Number(document.getElementById('odds').value);
+ const s=Number(document.getElementById('evStake').value);
+ const el=document.getElementById('evResult');
+ if(!Number.isFinite(p)||p<0||p>1||!Number.isFinite(o)||o<0||!Number.isFinite(s)||s<=0){
+  el.textContent='確率・オッズ・購入金額を正しく入力してください。';return;
+ }
+ const expected=s*(p*o-1);
+ el.innerHTML=`期待払戻：${yen(s*p*o)}<br>期待収支：${yen(expected)}<br>期待回収率：${(p*o*100).toFixed(1)}%`;
+}
+const STORAGE_KEY='myBoatLabHistoryV1';
+let records=[];
+try{records=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');if(!Array.isArray(records))records=[]}catch(e){records=[]}
+document.getElementById('date').value=new Date().toLocaleDateString('sv-SE');
+function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(records));render()}
+function addRecord(){
+ const stake=Number(document.getElementById('stake').value);
+ const payout=Number(document.getElementById('payout').value);
+ const status=document.getElementById('status').value;
+ if(!document.getElementById('date').value||!document.getElementById('venue').value.trim()||
+ !document.getElementById('ticket').value.trim()||!Number.isFinite(stake)||stake<=0||
+ !Number.isFinite(payout)||payout<0){alert('日付・場名・買い目・購入金額・払戻金を確認してください。');return}
+ if(status==='hit'&&payout<=0){if(!confirm('的中ですが払戻金が0円です。この内容で保存しますか？'))return}
+ records.unshift({
+ id:Date.now()+Math.random(),date:document.getElementById('date').value,
+ venue:document.getElementById('venue').value.trim(),race:document.getElementById('race').value,
+ ticket:document.getElementById('ticket').value.trim(),stake,payout,status
+ });
+ save();
+ document.getElementById('ticket').value='';
+ document.getElementById('stake').value='';
+ document.getElementById('payout').value='0';
+ alert('履歴を保存しました！');
+}
+function render(){
+ const settled=records.filter(r=>r.status!=='pending');
+ const totalStake=settled.reduce((s,r)=>s+r.stake,0);
+ const totalPayout=settled.reduce((s,r)=>s+r.payout,0);
+ const hits=settled.filter(r=>r.status==='hit').length;
+ document.getElementById('totalStake').textContent=yen(totalStake);
+ document.getElementById('totalPayout').textContent=yen(totalPayout);
+ const profit=totalPayout-totalStake;
+ document.getElementById('profit').textContent=(profit>0?'+':'')+yen(profit);
+ document.getElementById('roi').textContent=totalStake?(totalPayout/totalStake*100).toFixed(1)+'%':'—';
+ document.getElementById('hitRate').textContent=settled.length?(hits/settled.length*100).toFixed(1)+'%':'—';
+ document.getElementById('count').textContent=records.length;
+ const h=document.getElementById('history');
+ if(!records.length){h.innerHTML='<p>まだ履歴がありません。</p>';return}
+ h.innerHTML=`<table><thead><tr><th>日付・場</th><th>買い目</th><th>購入</th><th>払戻</th><th>結果</th><th></th></tr></thead><tbody>${
+ records.map(r=>`<tr>
+ <td>${esc(r.date)}<br>${esc(r.venue)} ${esc(r.race)}</td>
+ <td>${esc(r.ticket)}</td><td>${yen(r.stake)}</td><td>${yen(r.payout)}</td>
+ <td>${r.status==='hit'?'的中':r.status==='miss'?'ハズレ':'待ち'}</td>
+ <td><button class="danger" style="width:auto;margin:0;padding:7px" onclick="deleteRecord('${r.id}')">削除</button></td>
+ </tr>`).join('')
+ }</tbody></table>`;
+}
+function esc(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function deleteRecord(id){
+ if(!confirm('この履歴を削除しますか？'))return;
+ records=records.filter(r=>String(r.id)!==String(id));save();
+}
+function clearHistory(){
+ if(!records.length){alert('履歴はありません。');return}
+ if(!confirm('履歴をすべて削除します。元に戻せません。先にバックアップしましたか？'))return;
+ records=[];save();
+}
+function exportCSV(){
+ const header=['日付','場名','レース','買い目','購入金額','払戻金','結果'];
+ const rows=records.map(r=>[r.date,r.venue,r.race,r.ticket,r.stake,r.payout,r.status==='hit'?'的中':r.status==='miss'?'ハズレ':'結果待ち']);
+ const csv=[header,...rows].map(row=>row.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\r\n');
+ const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+ const url=URL.createObjectURL(blob);const a=document.createElement('a');
+ a.href=url;a.download='my-boat-lab-history.csv';a.click();URL.revokeObjectURL(url);
+}
+function exportBackup(){
+ const area=document.getElementById('backupText');
+ area.style.display='block';area.value=JSON.stringify(records,null,2);
+ area.select();alert('表示されたJSONをコピーして別の場所に保存してください。');
+}
+calcScore();calcEV();render();
 </script>
 </body>
 </html>
-

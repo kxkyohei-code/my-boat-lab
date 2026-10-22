@@ -1,0 +1,78 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MY BOAT LAB</title>
+<style>
+body{font-family:sans-serif;background:#f3f6fa;color:#18212f;margin:0;padding:16px}
+h1{color:#087f8c}
+.card{background:white;padding:16px;margin:14px 0;border-radius:14px;box-shadow:0 2px 8px #ddd}
+label{display:block;margin:12px 0 5px}
+input,select,button{box-sizing:border-box;padding:12px;width:100%;font-size:16px;border:1px solid #ccc;border-radius:8px}
+button{background:#087f8c;color:white;margin-top:12px;border:0;font-weight:bold}
+.result{padding:10px;background:#e7f7f5;margin:8px 0;border-radius:8px}
+small{color:#555}
+</style>
+</head>
+<body>
+<h1>🚤 MY BOAT LAB</h1>
+<p>自分専用・ボートレース予想研究室</p>
+<div class="card">
+<h2>① レース情報</h2>
+<label>開催場</label>
+<input id="place" placeholder="例：住之江">
+<label>レース番号</label>
+<input id="race" placeholder="例：12R">
+<small>※今はサンプル入力版。実際のレース情報は手動で入力してな。</small>
+</div>
+<div class="card">
+<h2>② 6艇の評価</h2>
+<p>各項目を1〜10点で入力。最初は仮の点数でOK。</p>
+<div id="boats"></div>
+<button onclick="predict()">予想スコアを計算</button>
+<div id="results"></div>
+</div>
+<div class="card">
+<h2>③ オッズ・期待値チェック</h2>
+<label>買い目の的中確率（%）</label>
+<input id="prob" type="number" min="0" max="100" placeholder="例：15">
+<label>オッズ</label>
+<input id="odds" type="number" min="1" step="0.1" placeholder="例：12.5">
+<button onclick="ev()">期待値を計算</button>
+<div id="evresult"></div>
+</div>
+<div class="card">
+<h2>④ このサイトの使い方</h2>
+<p>モーター・選手・コース・展示・STを評価して、点数順に並べる簡易ツール。</p>
+<p>期待値＝的中確率×オッズ。確率は自分の予測値を入力する方式やで。</p>
+<small>この点数や期待値は勝利を保証するものではありません。まずは記録・検証用として使ってな。</small>
+</div>
+<script>
+const names=["1号艇","2号艇","3号艇","4号艇","5号艇","6号艇"];
+const fields=[["motor","モーター"],["driver","選手"],["course","コース"],["exhibit","展示"],["st","ST"]];
+const weights={motor:.20,driver:.25,course:.20,exhibit:.15,st:.20};
+document.getElementById("boats").innerHTML=names.map((n,i)=>`
+<div class="result"><h3>${n}</h3>
+${fields.map(f=>`<label>${f[1]}評価（1〜10）</label>
+<input type="number" id="${f[0]}${i}" min="1" max="10" value="${i===0?8:6}">`).join("")}
+</div>`).join("");
+function predict(){
+let arr=names.map((n,i)=>{
+let score=fields.reduce((sum,f)=>sum+Number(document.getElementById(f[0]+i).value||0)*weights[f[0]],0);
+return {name:n,score:score};
+}).sort((a,b)=>b.score-a.score);
+document.getElementById("results").innerHTML="<h3>評価順位</h3>"+arr.map((b,i)=>`<div class="result">${i+1}位：${b.name} — ${b.score.toFixed(2)}点</div>`).join("")+"<p>上位艇を参考に、展開やオッズも確認して買い目を検討してな。</p>";
+}
+function ev(){
+let p=Number(document.getElementById("prob").value)/100;
+let o=Number(document.getElementById("odds").value);
+if(!(p>=0&&p<=1&&o>0)){document.getElementById("evresult").innerHTML="確率とオッズを入力してな。";return;}
+let value=p*o;
+document.getElementById("evresult").innerHTML=`<div class="result">期待回収率：${(value*100).toFixed(1)}%<br>${value>1?"入力値上はプラス期待値":"入力値上はマイナス期待値"}</div><small>確率の見積もりが正確とは限らへんので注意。</small>`;
+}
+predict();
+</script>
+</body>
+</html>

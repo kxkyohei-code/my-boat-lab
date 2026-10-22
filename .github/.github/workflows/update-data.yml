@@ -1,0 +1,16 @@
+name: Update boat data
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 21 * * *'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check workflow
+        run: echo "MY BOAT LAB workflow is running"
